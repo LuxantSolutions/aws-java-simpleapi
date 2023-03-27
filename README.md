@@ -1,4 +1,4 @@
-# aws-patterns.java
+# AWS Simple Java API for SNS
 
 This repository contains APIs to work with AWS communication technologies, namely SQS right now.
 
