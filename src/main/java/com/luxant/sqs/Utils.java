@@ -1,3 +1,15 @@
+// Copyright 2023 Luxant Solutions
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package com.luxant.sqs;
 
 import java.util.ArrayList;
@@ -25,7 +37,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SqsException;
 
 /**
- * Shared utility methods
+ * Shared utility methods, primarily used internally and in testing.
  */
 public class Utils {
 
@@ -34,12 +46,6 @@ public class Utils {
 
     private static Logger logger = Logger.getGlobal();
 
-    /**
-     * Creates a SqSClient, hardcoded for now but can be extended
-     * to read from a properties file, etc.
-     * 
-     * @return new client
-     */
     static SqsClient createClient() {
         return SqsClient.builder()
                 .region(Region.US_EAST_2)
@@ -47,10 +53,6 @@ public class Utils {
                 .build();
     }
 
-    /**
-     * Utility to sleep w/o try/catch.
-     * @param millis
-     */
     public static void sleep(long millis) {
         try {
             Thread.sleep(millis);
@@ -59,6 +61,12 @@ public class Utils {
         }
     }
 
+    /**
+     * Gets the queue url for a given queue name.
+     * @param client SqsClient to use
+     * @param queueName name of the queue
+     * @return the queue url
+     */
     static String getQueueUrl(SqsClient client, String queueName) {
         var qUrlReq = GetQueueUrlRequest.builder().queueName(queueName).build();
                
@@ -111,7 +119,12 @@ public class Utils {
         return cqResp.queueUrl();
     }
 
+    /**
+     * Connects to AWS SQS in US_EAST_2 with the profile credentials.
+     * @return SqsClient.
+     */
     public SqsClient connect() {
+        // TODO - read properties file for configuration.
         var pcp = ProfileCredentialsProvider.builder().build();
 
         return SqsClient.builder()

@@ -1,3 +1,15 @@
+// Copyright 2023 Luxant Solutions
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package com.luxant.sqs;
 
 import java.time.Duration;
@@ -11,6 +23,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
 
+/**
+ * Internal class used to process incoming requests.  This class 
+ * basically creates a temporary queue (that it will clean up),
+ * and a hash of outstanding requests. When a request is sent, 
+ * a future of the response is hashed with an response ID.
+ * The responder is required to send the response with the proper
+ * request ID.  When the response arrives, the future is obtained
+ * from the hash and completed. 
+ */
 class SqsRequestProcessor implements AutoCloseable {
     private String appName;
     private SqsConsumer consumer;
@@ -25,12 +46,12 @@ class SqsRequestProcessor implements AutoCloseable {
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public String nextResponseID() {
+    String nextResponseID() {
         int c = requestCount.incrementAndGet();
         return Long.toString(c) + requestorUUID;
     }
 
-    public SqsRequestProcessor(SqsClient client, String name, String qName) {
+    SqsRequestProcessor(SqsClient client, String name, String qName) {
         appName = name;
         String qn = qName;
         if (qn == null) {
@@ -40,22 +61,22 @@ class SqsRequestProcessor implements AutoCloseable {
 
         qUrl = Utils.createQueue(client, qn);
         
-        consumer = new SqsConsumer(client, qn, Integer.MAX_VALUE, Duration.ofSeconds(20), new ResponseHandler());
+        consumer = new SqsConsumer(client, qn, -1, Duration.ofSeconds(2), new ResponseHandler(), true);
         executor.execute(consumer);
     }
 
-    public String getQueueUrl() {
+    String getQueueUrl() {
         return consumer.getQueueUrl();
     }
 
-    public CompletableFuture<String> addRequest(String rid, CompletableFuture<String> f) {
+    CompletableFuture<String> addRequest(String rid, CompletableFuture<String> f) {
         synchronized (chmLock) {
             chm.put(rid, f);
         }
         return f;
     }
 
-    public void removeRequest(String rid) {
+    void removeRequest(String rid) {
         synchronized (chmLock) {
             chm.remove(rid);
         }
@@ -65,7 +86,7 @@ class SqsRequestProcessor implements AutoCloseable {
         return qUrl;
     }
 
-    public class ResponseHandler implements MessageHandler {
+    class ResponseHandler implements MessageHandler {
 
         @Override
         public void onMsg(Message m) {
@@ -90,7 +111,7 @@ class SqsRequestProcessor implements AutoCloseable {
         }
     }
 
-    public void shutdown() {
+    void shutdown() {
         consumer.shutdown();
         executor.shutdown();
         try {

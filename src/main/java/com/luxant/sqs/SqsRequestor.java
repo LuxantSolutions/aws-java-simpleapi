@@ -1,3 +1,15 @@
+// Copyright 2023 Luxant Solutions
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package com.luxant.sqs;
 
 import java.time.Duration;
@@ -13,11 +25,13 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
+/**
+ * A SqsRequestor sends requests to a SqsResponder and receives a response.
+ */
 public class SqsRequestor extends SqsProvider implements AutoCloseable  {
 
     String appName;
     String respQurl;
-    Duration reqTimeout = Duration.ofSeconds(1);
     SqsClient client;
     SendMessageRequest baseSmr;
 
@@ -31,7 +45,15 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
     static SqsRequestProcessor theProcessor;
     static Object sqsReqestProcessorLock = new Object();
 
-    static SqsRequestProcessor getProcessor(SqsClient client, String appName, String qName) {
+    /**
+     * Gets the static processor.
+     * @param client SqsClient.  If null, one will be created.
+     * @param appName Name of the application for use in generating a response queue.
+     * @param qName Name of the queue.
+     * @return a sqs requestor object.
+     */
+    static private SqsRequestProcessor getProcessor(SqsClient client, String appName, String qName) {
+        // TODO:  Create a processor per app name for scaling within the JVM.
         synchronized(sqsReqestProcessorLock) {
             if (theProcessor == null) {
                 theProcessor = new SqsRequestProcessor(client, appName, qName);
@@ -40,6 +62,11 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
         }
     }
 
+    /**
+     * Adds the response ID to the message attributes.
+     * @param rid the response ID
+     * @return Hashmap of the messages attributes.
+     */
     private HashMap<String, MessageAttributeValue> getAttrs(String rid) {
         var attrs = new HashMap<String, MessageAttributeValue>();
         attrs.putAll(baseSmr.messageAttributes());
@@ -53,6 +80,11 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
     // fast lookup for existing queues.
     ConcurrentHashMap<String,String> qUrlMap = new ConcurrentHashMap<>();
  
+    /**
+     * Gets a cached queue url for a queue, will create a queue if need be.
+     * @param queueName name of the queue.
+     * @return
+     */
     String getQueueUrl(String queueName) {
         String url = qUrlMap.get(queueName);
         if (url != null) {
@@ -64,6 +96,12 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
         return url;
     }
 
+    /**
+     * Requests a message from a SqsResponder.
+     * @param queueName name of the queue
+     * @param body body of the message
+     * @return Future for the result returned from SqsResponder.
+     */
     public CompletableFuture<String> request(String queueName, String body) {
         String rid = processor.nextResponseID();
         CompletableFuture<String> f = new CompletableFuture<>();
@@ -94,20 +132,23 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
         return f;
     }
 
+    /**
+     * Requests a message from a SqsResponder blocking until a response arrives.
+     * @param queueName name of the queue
+     * @param body body of the message
+     * @param timeout timeout for the request.
+     * @return The result from the SqsResponser as a String.
+     */
     public String request(String queue, String body, Duration timeout) throws InterruptedException, ExecutionException, TimeoutException {
         var f = request(queue, body);
         return f.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
     }
 
-    /**
-     * @param client the SqSClient, if null one is created.
-     */
     private void init(String appName, String respQueueName, Duration requestTimeout) {
         if (appName == null) {
             throw new IllegalArgumentException("queueName cannot be null.");
         }        
 
-        reqTimeout = requestTimeout;
         processor = getProcessor(sqsClient, appName, respQueueName);
         respQurl = processor.getQueueUrl();
 
@@ -123,14 +164,22 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
             .build();        
     }
 
-    SqsRequestor(SqsClient client, String appName, Duration requestTimeout) {
+    /**
+     * Creates a SqsRequestor
+     * 
+     * @param client SqsClient, if null one will be created.
+     * @param appName Application name for determining response queue name (if not set)
+     * @param responseQueueName Override for the temporary response queue name.
+     * @param requestTimeout - internal timeout for request polling.
+     */
+    public SqsRequestor(SqsClient client, String appName, String responseQueueName, Duration requestTimeout) {
         super(client);
-        init(appName, null, requestTimeout);
+        init(appName, responseQueueName, requestTimeout);
     }
 
-
     /**
-     * @param client the SqSClient
+     * Creates an SqsRequestor
+     * @param appName an application used to help in naming a temporary queue.
      */
     public SqsRequestor(String appName) {
         super(null);
@@ -138,13 +187,8 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
     }
     
     /**
-     * @param client the SqSClient
+     * Shuts down this requestor and frees resources.
      */
-    SqsRequestor(String appName, String responseQueueName, Duration requestTimeout) {
-        super(null);
-        init(appName, responseQueueName, requestTimeout);
-    }
-    
     public void shutdown() {
         processor.shutdown();
     }

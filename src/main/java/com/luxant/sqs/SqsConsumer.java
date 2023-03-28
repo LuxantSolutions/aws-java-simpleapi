@@ -1,3 +1,15 @@
+// Copyright 2023 Luxant Solutions
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 package com.luxant.sqs;
 
 import java.time.Duration;
@@ -10,21 +22,23 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
+/**
+ * The SqsConsumer consumes messages invoking a provided handler
+ * for every message received.
+ */
 public class SqsConsumer extends SqsProvider implements Runnable {
     String qName;
     String qUrl;
     MessageHandler msgHandler;
     int msgCount;
+    boolean deleteMsg = true;
     Duration reqTimeout = Duration.ofSeconds(1);
     AtomicInteger received = new AtomicInteger(0);
     AtomicBoolean running = new AtomicBoolean(false);
 
     Logger logger = Logger.getGlobal();
 
-    /**
-     * @param client the SqSClient, if null one is created.
-     */
-    private void init(String queueName, int count, Duration requestTimeout, MessageHandler handler) {
+    private void init(String queueName, int count, Duration requestTimeout, MessageHandler handler, boolean deleteMsg) {
         if (queueName == null) {
             throw new IllegalArgumentException("queueName cannot be null.");
         }
@@ -39,19 +53,45 @@ public class SqsConsumer extends SqsProvider implements Runnable {
         qUrl = createQueue(qName);
     }
 
-    public SqsConsumer(SqsClient client, String queueName, int count, Duration requestTimeout, MessageHandler handler) {
+    /**
+     * Creates a SqsConsumer.
+     * @param client a SqsClient.  Null will create a new SqsClient.
+     * @param queueName name of the queue to consume messages from
+     * @param count number of messages to process before exiting. -1 is unlimited.
+     * @param requestTimeout - internal timeout indicating how often to request messages.
+     * @param handler - invoked every time a messages is received.
+     */
+    public SqsConsumer(SqsClient client, String queueName, int count, Duration requestTimeout, MessageHandler handler, boolean deleteMsg) {
         super(client);
-        init(queueName, count, requestTimeout, handler);
+        init(queueName, count, requestTimeout, handler, deleteMsg);
     }
 
     /**
-     * @param client the SqSClient
+     * Creates a SqsConsumer.
+     * @param queueName name of the queue to consume messages from
+     * @param count number of messages to process before exiting. -1 is unlimited.
+     * @param requestTimeout - internal timeout indicating how often to request messages.
+     * @param handler - invoked every time a messages is received.
      */
     public SqsConsumer(String queueName, int count, Duration requestTimeout, MessageHandler handler) {
         super(null);
-        init(queueName, count, requestTimeout, handler);
+        init(queueName, count, requestTimeout, handler, true);
     }
 
+    /**
+     * Creates a SqsConsumer.
+     * @param queueName name of the queue to consume messages from
+     * @param handler - invoked every time a messages is received.
+     */
+    public SqsConsumer(String queueName, MessageHandler handler) {
+        super(null);
+        init(queueName, -1, Duration.ofSeconds(2), handler, true);
+    }    
+
+    /**
+     * Deletes a message received by this consumer.
+     * @param m the message to delete.
+     */
     public void deleteMessage(Message m) {
         Utils.deleteMessage(sqsClient, qUrl, m);
     }
@@ -59,12 +99,18 @@ public class SqsConsumer extends SqsProvider implements Runnable {
     private void handleMessage(Message m) {
         try {
             msgHandler.onMsg(m);
-            Utils.deleteMessage(sqsClient, qUrl, m);
+            if (deleteMsg) {
+                Utils.deleteMessage(sqsClient, qUrl, m);
+            }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Message handling exception: {0}", e.getMessage());
         }
     }
 
+    /** 
+     * Receives and processes messages until one of the following occurs:
+     * SqsConsumer.shutdown() is called, the thread is interrupted or the number of messages specified have been received.
+     */
     @Override
     public void run() {
         running.set(true);
@@ -98,14 +144,26 @@ public class SqsConsumer extends SqsProvider implements Runnable {
         logger.log(Level.FINE, logline);
     }
 
+    /**
+     * Convenience function to get the queue url.
+     * @return url of the queue.
+     */
     public String getQueueUrl() {
         return qUrl;
     }
 
+    /**
+     * Gets the number of messages received.
+     * @return number of messages
+     */
     public int getReceivedCount() {
         return received.get();
     }
 
+    /*
+     * Gracefully shuts down processing to avoid interrupting 
+     * the thread to exit run().
+     */
     public void shutdown() {
         running.set(false);
     }
