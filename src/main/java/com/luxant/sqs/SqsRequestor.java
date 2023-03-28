@@ -144,7 +144,7 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
         return f.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
     }
 
-    private void init(String appName, String respQueueName, Duration requestTimeout) {
+    private void init(String appName, String respQueueName) {
         if (appName == null) {
             throw new IllegalArgumentException("queueName cannot be null.");
         }        
@@ -174,7 +174,7 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
      */
     public SqsRequestor(SqsClient client, String appName, String responseQueueName, Duration requestTimeout) {
         super(client);
-        init(appName, responseQueueName, requestTimeout);
+        init(appName, responseQueueName);
     }
 
     /**
@@ -183,7 +183,7 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
      */
     public SqsRequestor(String appName) {
         super(null);
-        init(appName, null, Duration.ofSeconds(20));
+        init(appName, null);
     }
     
     /**
