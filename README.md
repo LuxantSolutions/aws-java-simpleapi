@@ -12,7 +12,7 @@ having an API do the heavy lifting. There wasn't a lot of work with sending and 
 (request/reply) APIs do a lot of heaving lifting for you. There are existing SQS async and request/reply APIs,
 this is just a vastly oversimplified API built to help with a few simple patterns.
 
-This only has whatI require to send and recieve messages over SQS utilizing various communications patterns, including microservices. In the future this may be enhanced for FIFO queues, buffering, and performance.
+This only has whatI require to send and receive messages over SQS utilizing various communications patterns, including microservices. In the future this may be enhanced for FIFO queues, buffering, and performance.
 
 ## Usage
 
@@ -61,7 +61,7 @@ Send as many messages as you would like by just calling the `sendMessage` API.
 
 The consumer implements `Runnable` and is thus designed to run in
 a thread or be invoked by an executor.  It accepts an interface that has an 
-onMsg method.  This method is invoked for every message recieved until
+onMsg method.  This method is invoked for every message received until
 the number of messages has been reached.  The timeout specified is an 
 internal timeout specfiying how long to block until the next messages
 arrives and the next getMessages calls is invoked. By default, 
@@ -182,7 +182,7 @@ $ scripts/sqssend.sh test-queue hello
 Sent message to queue test-queue: hello
 ```
 
-### Recieve from a queue
+### Receive from a queue
 
 ```bash
 $ scripts/sqsrecv.sh test-queue 1 2
