@@ -28,15 +28,15 @@ public class SqsProducerBenchTests {
     ExecutorService executor = Executors.newFixedThreadPool(110);
 
     @Test public void TestBasicProducerBench() {
-        SqsProducerBench p = new SqsProducerBench("TestBasicProducerBenchQueue", "hello", 100, 100, true);
+        SqsProducerBench p = new SqsProducerBench("TestBasicProducerBenchQueue", "hello", 1000, 100, true);
 
         var client = p.getClient();
-        var qUrl = Utils.getQueueUrl(p.getClient(), "TestBasicProducerBenchQueue");
+        var qUrl = Utils.getQueueUrl(client, "TestBasicProducerBenchQueue");
 
         executor.execute(p);
         executor.shutdown();
         try {
-            executor.awaitTermination(10, TimeUnit.SECONDS);
+            executor.awaitTermination(20, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -50,6 +50,6 @@ public class SqsProducerBenchTests {
         assertEquals(100, msgs.size());
         assertEquals("hello", msgs.get(0).body());
 
-        Utils.deleteQueue(p.getClient(), qUrl);
+        Utils.deleteQueue(client, qUrl);
     }
 }

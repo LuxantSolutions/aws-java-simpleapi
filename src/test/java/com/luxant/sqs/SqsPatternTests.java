@@ -110,8 +110,7 @@ public class SqsPatternTests {
         }
 
         var consumer = new SqsConsumer("test-queue-aggregate", 100, Duration.ofSeconds(5),
-                msg -> {
-                    /* noop */});
+                msg -> { /* noop */});
         es.execute(consumer);
 
         shutdownAndWait(es);
@@ -121,7 +120,7 @@ public class SqsPatternTests {
         for (var p : producers) {
             sendCount += p.getSentCount();
         }
-        assertEquals(consumer.getReceivedCount(), sendCount);
+        assertEquals(sendCount, consumer.getReceivedCount());
         Utils.deleteQueue(consumer.getClient(), consumer.getQueueUrl());
     }
 
@@ -164,13 +163,14 @@ public class SqsPatternTests {
         /* make a request */
         try (SqsRequestor requestor = new SqsRequestor("requestor-serial")) {
             for (int i = 0; i < 10; i++) {
-                String response = requestor.request("service-queue", "help!", Duration.ofSeconds(10));
-                assertEquals(MyService.RESPONSE_BODY, response);
+                assertEquals(MyService.RESPONSE_BODY, 
+                    requestor.request("service-queue", "help!", Duration.ofSeconds(10)));
             }
         } catch (Exception e) {
             e.printStackTrace();
             fail("Exception thrown: " + e.getMessage());
         }
+        es.shutdownNow();
         Utils.deleteQueue("service-queue");
     }
 
@@ -220,10 +220,10 @@ public class SqsPatternTests {
             var stop = System.currentTimeMillis();
 
             // a low bar for scaling, but did it go faster than serially?
-            long serialDuration = rtt * requests.size();
+            long expectedDuration = rtt * requests.size();
             long actualDuration = stop - start;
-            Assert.assertTrue(String.format("Test did not scale.  Serial duration = %d ms, actual = %d ms.",
-                    serialDuration, actualDuration), actualDuration < serialDuration);
+            Assert.assertTrue(String.format("Test did not scale.  Expected duration = %d ms, actual = %d ms.",
+                expectedDuration, actualDuration), actualDuration < expectedDuration);
 
             // check for some distribution and that all requests were handled by the service
             int handled = 0;
@@ -266,13 +266,13 @@ public class SqsPatternTests {
                 cf.get();
             }
             Assert.assertEquals(service1.getReceivedCount(), requests.size() / 2);
-            Assert.assertEquals(service2.getReceivedCount(), requests.size() / 2);
-
-            Utils.deleteQueue(requestor.getClient(), requestor.getQueueUrl("service-queue-1"));
-            Utils.deleteQueue(requestor.getClient(), requestor.getQueueUrl("service-queue-2"));
+            Assert.assertEquals(service2.getReceivedCount(), requests.size() / 2);   
         } catch (Exception e) {
             e.printStackTrace();
             fail("Exception thrown: " + e.getMessage());
+        } finally {
+            Utils.deleteQueue("service-queue-1");
+            Utils.deleteQueue("service-queue-2");
         }
     }
 }
