@@ -21,11 +21,12 @@ import static org.junit.Assert.*;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 
 public class SqsRequestReplyTests {
 
-    private class testService implements MessageHandler, Runnable {
+    private class testService implements Consumer<Message>, Runnable {
         static final public String RESPONSE_BODY = "Here's some help.";
         SqsResponder responder;
 
@@ -34,7 +35,7 @@ public class SqsRequestReplyTests {
         }
 
         @Override
-        public void onMsg(Message m) {
+        public void accept(Message m) {
             responder.reply(m, RESPONSE_BODY);
         }
 

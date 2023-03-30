@@ -15,6 +15,7 @@ package com.luxant.sqs;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -65,10 +66,10 @@ public class SqsResponder extends SqsConsumer {
      * @param queueName name of the queue to poll
      * @param count number of messages to process before exiting, 01 is infinite.
      * @param timeout internal poll timeout
-     * @param handler the message handler.
+     * @param msgConsumer the message handler.
      */
-    public SqsResponder(SqsClient client, String queueName, int count, Duration timeout, MessageHandler handler) {
-        super(client, queueName, count, timeout, handler, true);
+    public SqsResponder(SqsClient client, String queueName, int count, Duration timeout, Consumer<Message> msgConsumer) {
+        super(client, queueName, count, timeout, msgConsumer, true);
     }
 
     /**
@@ -76,8 +77,8 @@ public class SqsResponder extends SqsConsumer {
      * @param queueName name of the queue to poll
      * @param handler the message handler.
      */
-    public SqsResponder(String queueName, MessageHandler handler) {
-        super(null, queueName, Integer.MAX_VALUE, Duration.ofSeconds(20), handler, true);
+    public SqsResponder(String queueName, Consumer<Message> msgConsumer) {
+        super(null, queueName, Integer.MAX_VALUE, Duration.ofSeconds(20), msgConsumer, true);
     }
     
     /**

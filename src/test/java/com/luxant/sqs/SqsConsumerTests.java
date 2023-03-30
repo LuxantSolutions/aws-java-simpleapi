@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.sqs.model.Message;
 import static org.junit.Assert.*;
 
 import java.time.Duration;
+import java.util.function.Consumer;
 
 
 public class SqsConsumerTests {
@@ -27,11 +28,11 @@ public class SqsConsumerTests {
         
         final String qn = "TestBasicConsumerQueue";
 
-        class ConsumerHandler implements MessageHandler {
+        class ConsumerHandler implements Consumer<Message> {
             public String result;
 
             @Override
-            public void onMsg(Message m) {
+            public void accept(Message m) {
                 result = m.body();
             }
         }
