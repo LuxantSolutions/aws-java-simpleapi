@@ -29,7 +29,7 @@ import software.amazon.awssdk.services.sqs.model.SqsException;
  * 
  * An easy way to use this class is as follows:
  * <pre>
- *     class MyService implements MessageHandler, Runnable {
+ *     class MyService implements Consumer<Message>, Runnable {
  *      SqsResponder responder;
  * 
  *       public MyService(String listenQueue) {
@@ -37,7 +37,7 @@ import software.amazon.awssdk.services.sqs.model.SqsException;
  *       }
  *
  *      @Override
- *      public void onMsg(Message m) {
+ *      public void accept(Message m) {
  *          // Do some work here - this is where your application code
  *          // will process the incoming messages.  Then just use the 
  *          // convenience API to reply to service requests
@@ -133,5 +133,5 @@ public class SqsResponder extends SqsConsumer {
             // a temporary queue, this can be expected - we want to continue
             // processing messages.
         }
-    } 
+    }
 }
