@@ -74,7 +74,7 @@ public class SqsPatternTests {
          * Setup the consumers. Count is 100 to avoid potential redelivery
          * and thus false negatives without large timeouts. Aggregate consumer
          * received message count should match # sent, but no one consumer should
-         * recieve all messages.
+         * receive all messages.
          */
         SqsConsumer[] consumers = new SqsConsumer[10];
         for (int i = 0; i < consumers.length; i++) {

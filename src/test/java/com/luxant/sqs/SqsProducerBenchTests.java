@@ -41,7 +41,7 @@ public class SqsProducerBenchTests {
             Thread.currentThread().interrupt();
         }
 
-        // recieve at least one message.
+        // receive at least one message.
         var msgs = new ArrayList<Message>();
         while (msgs.size() < 100) {
             msgs.addAll(Utils.receiveMessages(client, qUrl, 2));
