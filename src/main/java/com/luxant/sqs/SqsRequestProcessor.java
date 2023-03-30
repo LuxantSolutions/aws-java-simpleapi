@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -41,11 +42,33 @@ class SqsRequestProcessor implements AutoCloseable {
     /* Each object instance gets it own ID and counter to avoid collisions */
     String requestorUUID = UUID.randomUUID().toString();
     AtomicInteger requestCount = new AtomicInteger(0);
-    String qUrl = null;
+    int refCount = 0;
     HashMap<String,CompletableFuture<String>> chm = new HashMap<>();
     private Object chmLock = new Object();
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    static HashMap<String, SqsRequestProcessor> processors = new HashMap<>();
+    static Object sqsReqestProcessorLock = new Object();
+
+    /**
+     * Gets the processor for the given application name.
+     * @param client SqsClient.  If null, one will be created.
+     * @param appName Name of the application for use in generating a response queue.
+     * @param qName Name of the queue.
+     * @return a sqs requestor object.
+     */
+    static SqsRequestProcessor getProcessor(SqsClient client, String appName, String qName) {
+        synchronized(sqsReqestProcessorLock) {
+            var p = processors.get(appName);
+            if (p == null) {
+                p = new SqsRequestProcessor(client, appName, qName);
+                processors.put(appName, p);
+            } 
+            p.refCount++;
+            return p;
+        }
+    }
 
     String nextResponseID() {
         int c = requestCount.incrementAndGet();
@@ -59,8 +82,6 @@ class SqsRequestProcessor implements AutoCloseable {
             qn = appName + "-" + requestorUUID;
             ownsQueue = true;
         }
-
-        qUrl = Utils.createQueue(client, qn);
         
         consumer = new SqsConsumer(client, qn, -1, Duration.ofSeconds(2), new ResponseHandler(), true);
         executor.execute(consumer);
@@ -84,7 +105,7 @@ class SqsRequestProcessor implements AutoCloseable {
     }
 
     String getReplyQueueUrl() {
-        return qUrl;
+        return consumer.getQueueUrl();
     }
 
     class ResponseHandler implements Consumer<Message> {
@@ -112,16 +133,27 @@ class SqsRequestProcessor implements AutoCloseable {
         }
     }
 
+
     void shutdown() {
+        synchronized (sqsReqestProcessorLock) {
+            int count = --refCount;
+            if (count != 0) {
+                return;
+            }
+            processors.remove(appName);
+        }
+
         consumer.shutdown();
         executor.shutdown();
+
         try {
-            executor.awaitTermination(0, null);
+            executor.awaitTermination(2, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        }
-        if (ownsQueue) {
-            Utils.deleteQueue(consumer.sqsClient, qUrl);
+        } finally {
+            if (ownsQueue) {
+                Utils.deleteQueue(consumer.getClient(), consumer.getQueueUrl());
+            }
         }
     }
 

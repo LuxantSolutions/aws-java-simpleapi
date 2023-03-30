@@ -162,7 +162,7 @@ public class SqsPatternTests {
         es.execute(new MyService("service-queue", 0));
 
         /* make a request */
-        try (SqsRequestor requestor = new SqsRequestor("requestor")) {
+        try (SqsRequestor requestor = new SqsRequestor("requestor-serial")) {
             for (int i = 0; i < 10; i++) {
                 String response = requestor.request("service-queue", "help!", Duration.ofSeconds(10));
                 assertEquals(MyService.RESPONSE_BODY, response);
@@ -203,7 +203,7 @@ public class SqsPatternTests {
 
         // Serially, this would take RTT * 100 requests, so approx 10 seconds
         // plus wire time. Ensure it's less than that.
-        try (SqsRequestor requestor = new SqsRequestor("requestor")) {
+        try (SqsRequestor requestor = new SqsRequestor("requestor-scaling")) {
 
             long rtt = primeAndGetRequestRTT(requestor, "service-queue-scale");
 

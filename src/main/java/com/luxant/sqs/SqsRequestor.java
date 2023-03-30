@@ -39,28 +39,7 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
     public static final String RESPONSE_ID = "lux-req-resp-id";
     public static final String RESPONSE_QUEUE = "lux-resp-queue-url";
 
-    /* Singleton that wasn't built for purists */
-    SqsRequestProcessor processor;
-
-    static SqsRequestProcessor theProcessor;
-    static Object sqsReqestProcessorLock = new Object();
-
-    /**
-     * Gets the static processor.
-     * @param client SqsClient.  If null, one will be created.
-     * @param appName Name of the application for use in generating a response queue.
-     * @param qName Name of the queue.
-     * @return a sqs requestor object.
-     */
-    static private SqsRequestProcessor getProcessor(SqsClient client, String appName, String qName) {
-        // TODO:  Create a processor per app name for scaling within the JVM.
-        synchronized(sqsReqestProcessorLock) {
-            if (theProcessor == null) {
-                theProcessor = new SqsRequestProcessor(client, appName, qName);
-            }
-            return theProcessor;
-        }
-    }
+    private SqsRequestProcessor processor = null;
 
     /**
      * Adds the response ID to the message attributes.
@@ -149,7 +128,7 @@ public class SqsRequestor extends SqsProvider implements AutoCloseable  {
             throw new IllegalArgumentException("queueName cannot be null.");
         }        
 
-        processor = getProcessor(sqsClient, appName, respQueueName);
+        processor = SqsRequestProcessor.getProcessor(sqsClient, appName, respQueueName);
         respQurl = processor.getQueueUrl();
 
         var attrs = new HashMap<String, MessageAttributeValue>();

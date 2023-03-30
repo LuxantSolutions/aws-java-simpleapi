@@ -132,7 +132,7 @@ public class SqsProducerBench extends SqsProvider implements Runnable {
             CompletableFuture.allOf(ary).join();
         } catch (Exception e) {
             logger.severe("Exception sending: " + e);
-            logger.severe("Exiting producer thread on queue: " + qName);  
+            logger.severe("Exiting producer thread on queue: " + qName); 
         }
     }
 
