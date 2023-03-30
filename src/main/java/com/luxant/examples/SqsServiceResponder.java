@@ -17,8 +17,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
-import com.luxant.sqs.MessageHandler;
 import com.luxant.sqs.SqsResponder;
 
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -27,7 +27,7 @@ public class SqsServiceResponder {
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    class EchoService implements MessageHandler, Runnable {
+    class EchoService implements Consumer<Message>, Runnable {
         SqsResponder responder;
 
         public EchoService(String listenQueue) {
@@ -35,7 +35,7 @@ public class SqsServiceResponder {
         }
 
         @Override
-        public void onMsg(Message m) {
+        public void accept(Message m) {
             String respMsg = String.format("Echo: %s", m.body());
             System.out.printf("Received request, responding with: %s.\n", respMsg);
             responder.reply(m, respMsg);

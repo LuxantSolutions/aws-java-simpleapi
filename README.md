@@ -68,11 +68,11 @@ arrives and the next getMessages calls is invoked. By default,
 messages will be deleted after onMsg is called.
 
 ```java
-        class ConsumerHandler implements MessageHandler {
+        class ConsumerHandler implements Consumer<Message> {
             public String result;
 
             @Override
-            public void onMsg(Message m) {
+            public void acccept(Message m) {
                 result = m.body();
                 // do some application work here
             }
@@ -95,13 +95,13 @@ the thread is interrupted, or an unrecoverable SQS error occurs.
 ### SqsServiceResponder
 
 This is the service side of a microservice.  All you need to do is define a consumer
-`onMsg` interface and respond via the convenient SqsResponder class.  The SqsResponder
+interface and respond via the convenient SqsResponder class.  The SqsResponder
 will create an internal response queue a singleton to access that temporary queue will
 be used so you can have multiple responders multiplex across this single queue.  Each
 JVM instance will have its own internal response queue.
 
 ```java
-    class MyService implements MessageHandler, Runnable {
+    class MyService implements Consumer<Message>, Runnable {
         SqsResponder responder;
 
         public MyService(String listenQueue) {
@@ -109,7 +109,7 @@ JVM instance will have its own internal response queue.
         }
 
         @Override
-        public void onMsg(Message m) {
+        public void accept(Message m) {
             // Do some work here - this is where your application code
             // will process the incoming messages.  Then just use the 
             // convenience API to reply to service requests
@@ -124,7 +124,7 @@ JVM instance will have its own internal response queue.
     }
 ```
 
-Asking your service to do something is simple: 
+The following code starts your service to accept requests: 
 
 ```java
     ExecutorService executor = Executors.newSingleThreadExecutor();

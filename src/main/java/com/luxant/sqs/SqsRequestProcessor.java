@@ -19,6 +19,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -86,10 +87,10 @@ class SqsRequestProcessor implements AutoCloseable {
         return qUrl;
     }
 
-    class ResponseHandler implements MessageHandler {
+    class ResponseHandler implements Consumer<Message> {
 
         @Override
-        public void onMsg(Message m) {
+        public void accept(Message m) {
             var attributes = m.messageAttributes();
             var ridAttrValue = attributes.get(SqsRequestor.RESPONSE_ID);
 

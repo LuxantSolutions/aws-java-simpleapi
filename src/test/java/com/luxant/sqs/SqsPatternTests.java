@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 public class SqsPatternTests {
@@ -124,7 +125,7 @@ public class SqsPatternTests {
         Utils.deleteQueue(consumer.getClient(), consumer.getQueueUrl());
     }
 
-    private class MyService implements MessageHandler, Runnable {
+    private class MyService implements Consumer<Message>, Runnable {
         static final public String RESPONSE_BODY = "Here's some help.";
 
         SqsResponder responder;
@@ -136,7 +137,7 @@ public class SqsPatternTests {
         }
 
         @Override
-        public void onMsg(Message m) {
+        public void accept(Message m) {
             if (delay > 0) {
                 Utils.sleep(delay);
             }
