@@ -48,7 +48,6 @@ public class Utils {
 
     static SqsClient createClient() {
         return SqsClient.builder()
-                .region(Region.US_EAST_2)
                 .credentialsProvider(ProfileCredentialsProvider.builder().build())
                 .build();
     }
