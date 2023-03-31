@@ -1,6 +1,8 @@
-# AWS Simple Java API for SQS
+# AWS Simple Java API for SQS (WIP)
 
 This repository contains APIs to work with AWS communication technologies, namely SQS right now.
+This Java API supports simple sending and receiving to queues writing a microservice using queues in just
+a few lines of code.
 
 ## Overview
 
