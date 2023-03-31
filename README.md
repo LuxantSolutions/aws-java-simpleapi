@@ -22,6 +22,35 @@ There are four primarly classes, [SqsProducer](./src/main/java/com/luxant/sqs/Sq
 [SqsConsumer](./src/main/java/com/luxant/sqs/SqsConsumer.java),
 [SqsRequestor](./src/main/java/com/luxant/sqs/SqsRequestor.java) and [SqsReplier](./src/main/java/com/luxant/sqs/SqsReplier.java).
 
+### Configuration
+
+You will need to generate an [access key](https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html) with permissions to use Amazon services (SQS, etc). Permissions need to support queue creation and deletion.
+
+Credentials and configuration is driven by AWS settings in a [file](https://docs.aws.amazon.com/powershell/latest/userguide/specifying-your-aws-credentials.html#specifying-your-aws-credentials-store) or [environment](https://docs.aws.amazon.com/sdkref/latest/guide/environment-variables.html).
+You'll want to have a [region selected](https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-region.html).
+
+Here are example configuration and credential files:
+
+```bash
+$ tree ~/.aws
+/Users/colinsullivan/.aws
+├── config
+└── credentials
+
+$ cat config
+[default]
+region=us-east-2
+output = json
+
+$ cat credentials 
+[default]
+aws_access_key_id = AKIA0123456787EXAMPLE
+aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+region = us-east-2
+```
+
+
+
 ### Imports
 
 To use this library you'll want to inclue the following imports:
@@ -239,20 +268,11 @@ OS:           Mac OS X 13.2.1 x86_64
 
 Anything older may work, but no guarantees.  Java 8 will not work, 19 does not with Gradle.
 
-### Building
+### Building and Testing
 
 Building alone: `./gradlew build -x test`
 
-For testing, you will need default AWS credentials.
-
-```bash
- tree ~/.aws
-/Users/colinsullivan/.aws
-├── config
-└── credentials
-```
-
-You will need to generate an [access key](https://docs.aws.amazon.com/powershell/latest/userguide/pstools-appendix-sign-up.html) with permissions to use Amazon services (SQS, etc).  You will want to allow queue creation and deletion.
+For testing, you will need default AWS credentials set or proper environment varibles set.
 
 Build and Test: `./gradlew build`
 
