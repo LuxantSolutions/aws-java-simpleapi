@@ -1,3 +1,3 @@
 #!/bin/sh
 
-java -cp `pwd`/build/libs/aws-patterns-simpleapi-allinone.jar com.luxant.examples.SqsSend $*
+java -cp `pwd`/build/libs/aws-java-simpleapi-all.jar com.luxant.examples.SqsSend $*
