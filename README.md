@@ -1,4 +1,4 @@
-# AWS Simple Java API for SNS
+# AWS Simple Java API for SQS
 
 This repository contains APIs to work with AWS communication technologies, namely SQS right now.
 
