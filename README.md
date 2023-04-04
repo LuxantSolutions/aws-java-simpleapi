@@ -266,7 +266,7 @@ OS:           Mac OS X 13.2.1 x86_64
 
 ```
 
-Anything older may work, but no guarantees.  Java 8 will not work, 19 does not with Gradle.
+Anything different may work, but no guarantees.  Java 8 will not work, 19 does not with Gradle.
 
 ### Building and Testing
 
