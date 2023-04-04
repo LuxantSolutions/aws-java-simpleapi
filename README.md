@@ -6,7 +6,7 @@ a few lines of code.
 
 ## Overview
 
-Long story short, I was looking into AWS communication technologies for a project, and found that the SNS API,
+Long story short, I was looking into AWS communication technologies for a project, and found that the SQS API,
 while fairly rich, was way more than I needed. So I built simple API for sending, receiving, and creating
 and accessing microservices. By no means are the existing APIs lacking, but I just wanted to reduce typing and
 support autocreation of queues so all that was required was adding a small amount of application code and
