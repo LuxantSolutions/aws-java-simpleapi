@@ -4,6 +4,9 @@ This repository contains APIs to work with AWS communication technologies, namel
 This Java API supports sending and receiving as well as writing a microservice over SQS in just
 a few lines of code.
 
+[![License Apache 2](https://img.shields.io/badge/License-Apache2-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Build Main Badge](https://github.com/LuxantSolutions/aws-java-simpleapi/actions/workflows/gradle.yml/badge.svg?event=push)](https://github.com/LuxantSolutions/aws-java-simpleapi/actions/workflows/gradle.yml)
+
 ## Overview
 
 Long story short, I was looking into AWS communication technologies for a project, and found that the SQS API,
