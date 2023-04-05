@@ -9,21 +9,24 @@ a few lines of code.
 
 ## Overview
 
-Long story short, I was looking into AWS communication technologies for a project, and found that the SQS API,
-while fairly rich, was way more than I needed. So I built simple API for sending, receiving, and creating
-and accessing microservices. By no means are the existing APIs lacking, but I just wanted to reduce typing and
-support autocreation of queues so all that was required was adding a small amount of application code and
-having an API do the heavy lifting. There wasn't a lot of work with sending and receiving, but the services
-(request/reply) APIs do a lot of heaving lifting for you. There are existing SQS async and request/reply APIs,
-this is just a vastly oversimplified API built to help with a few simple patterns.
+I was looking into AWS communication technologies for a project and found that the SQS API, while fairly rich,
+was way more granular than I needed. So I built simple API for sending, receiving, and creating and accessing
+microservices. By no means are the existing APIs lacking; I just wanted to reduce typing and
+support autocreation of queues  - so all that was required was adding a small amount of application code and
+having an API do the heavy lifting.
 
-This only has whatI require to send and receive messages over SQS utilizing various communications patterns, including microservices. In the future this may be enhanced for FIFO queues, buffering, and performance.
+SqS sending and receiving was straightforward, but there really wasn't much of a services API so I built a small
+framework/API to do the heavy lifting there. There are existing SQS asyncvand request/reply APIs, and they look
+nice, but this is just a vastly (over)simplified API built to help with a few simple patterns.
+
+This only has what I needed to send and receive messages over SQS utilizing various communications patterns,
+including microservices. In the future this may be enhanced for FIFO queues, buffering, and performance.
 
 ## Usage
 
 There are four primarly classes, [SqsProducer](./src/main/java/com/luxant/sqs/SqsProducer.java),
 [SqsConsumer](./src/main/java/com/luxant/sqs/SqsConsumer.java),
-[SqsRequestor](./src/main/java/com/luxant/sqs/SqsRequestor.java) and [SqsReplier](./src/main/java/com/luxant/sqs/SqsReplier.java).
+[SqsRequestor](./src/main/java/com/luxant/sqs/SqsRequestor.java) and [SqsResponder](./src/main/java/com/luxant/sqs/SqsResponder.java).
 
 ### Configuration
 
@@ -51,8 +54,6 @@ aws_access_key_id = AKIA0123456787EXAMPLE
 aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 region = us-east-2
 ```
-
-
 
 ### Imports
 
@@ -108,7 +109,7 @@ messages will be deleted after onMsg is called.
             @Override
             public void acccept(Message m) {
                 result = m.body();
-                // do some application work here
+                // do your application work here
             }
         }
 
@@ -171,7 +172,7 @@ scale services. Just launch more instances - that's it.
 
 ### SqsServiceRequestor
 
-Now, in order to send messages, you'll just want to make a reqest.  Here we give a geneous 10
+Now, in order to send messages, you'll just want to make a reqest. Here we give a generous 10
 seconds to respond.
 
 ```java
@@ -188,7 +189,7 @@ Simple examples of each can be found here:
 
 ## Patterns
 
-I've tested these with various patterns which include:
+These APIs have been tested with with various patterns including:
 
 - 1:1 Streaming:  One producer to One consumer
 - N:1 Streaming:  Aggregation of data sent by producers
