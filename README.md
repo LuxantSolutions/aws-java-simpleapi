@@ -16,7 +16,7 @@ support autocreation of queues  - so all that was required was adding a small am
 having an API do the heavy lifting.
 
 SqS sending and receiving was straightforward, but there really wasn't much of a services API so I built a small
-framework/API to do the heavy lifting there. There are existing SQS asyncvand request/reply APIs, and they look
+framework/API to do the heavy lifting there. There are existing SQS async and request/reply APIs, and they look
 nice, but this is just a vastly (over)simplified API built to help with a few simple patterns.
 
 This only has what I needed to send and receive messages over SQS utilizing various communications patterns,
