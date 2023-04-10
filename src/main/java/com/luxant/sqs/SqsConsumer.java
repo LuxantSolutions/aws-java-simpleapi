@@ -125,6 +125,12 @@ public class SqsConsumer extends SqsProvider implements Runnable {
                 .messageAttributeNames("ALL", SqsRequestor.RESPONSE_ID, SqsRequestor.RESPONSE_QUEUE)
                 .build();
 
+        // This is a sawtooth pattern here, but with Sqs rates an
+        // optimization wouldn't make much of a difference unless
+        // the callback was very slow and user code blocked.
+        // In a high speed system, you'd optimize this to continuously
+        // poll and fill a buffer in which another thread would invoke
+        // the callback.
         while (running.get() && !Thread.currentThread().isInterrupted()) {
             try {
                 var msgs = sqsClient.receiveMessage(receiveMessageRequest).messages();
